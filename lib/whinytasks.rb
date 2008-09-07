@@ -1,9 +1,10 @@
-module WhinyTasks
-    VERSION = '0.0.2'
-end
+class WhinyTasks
+    VERSION = '0.1.1'
+    def self.whine(subject, message)
+        WhinyTasks.send("whine_via_" + CONFIG[:delivery_method], build_message(subject, message))
+    end
 
-class Object
-    def whine(subject, message)
+    def self.build_message(subject, message)
         msg = <<END_OF_MESSAGE
         From: #{WhinyTasks::CONFIG[:from_alias]} <#{WhinyTasks::CONFIG[:from]}>
         To: #{WhinyTasks::CONFIG[:to_alias]} <#{WhinyTasks::CONFIG[:to]}>
@@ -11,19 +12,29 @@ class Object
 
         #{message}
 END_OF_MESSAGE
-        
-    Net::SMTP.start('localhost') do |smtp|
-            smtp.send_message msg, WhinyTasks::CONFIG[:from], WhinyTasks::CONFIG[:to]
+    end
+
+    def self.whine_via_smtp(message)
+        Net::SMTP.start('localhost') do |smtp|
+            smtp.send_message message, WhinyTasks::CONFIG[:from], WhinyTasks::CONFIG[:to]
         end
     end
 
+    def self.whine_via_sendmail(message)
+        IO.popen("/usr/sbin/sendmail -t -oi", "w") do |io|
+          io.write(message)
+        end
+    end
+end
+
+class Object
     def whiny_task(deps, &block)
         if eval(WhinyTasks::CONFIG[:whine_if])
             block_with_exception_handling = Proc.new do 
                 begin
                     block.call
                 rescue Exception => e 
-                    whine(e.message, e.backtrace.join("\n"))
+                    WhinyTasks.whine(e.message, e.backtrace.join("\n"))
                 end
             end 
             task deps, &block_with_exception_handling
