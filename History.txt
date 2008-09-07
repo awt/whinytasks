@@ -1,0 +1,6 @@
+=== 1.0.0 / 2008-09-06
+
+* added whine_if config var to allow conditional whining based on the environment (production, dev, etc)
+
+  * Birthday!
+
