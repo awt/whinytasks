@@ -5,10 +5,10 @@ class WhinyTasks
     end
 
     def self.build_message(subject, message)
-        msg = <<END_OF_MESSAGE
-        From: #{WhinyTasks::CONFIG[:from_alias]} <#{WhinyTasks::CONFIG[:from]}>
-        To: #{WhinyTasks::CONFIG[:to_alias]} <#{WhinyTasks::CONFIG[:to]}>
-        Subject: #{subject}
+        msg = <<END_OF_MESSAGE 
+From: #{WhinyTasks::CONFIG[:from_alias]} <#{WhinyTasks::CONFIG[:from]}>
+To: #{WhinyTasks::CONFIG[:to_alias]} <#{WhinyTasks::CONFIG[:to]}>
+Subject: #{subject}
 
         #{message}
 END_OF_MESSAGE
@@ -21,9 +21,9 @@ END_OF_MESSAGE
     end
 
     def self.whine_via_sendmail(message)
-        IO.popen("/usr/sbin/sendmail -t -oi", "w") do |io|
-          io.write(message)
-        end
+        sendmail = IO.popen("#{WhinyTasks::CONFIG[:sendmail_path]} #{WhinyTasks::CONFIG[:to]}", 'w+')
+        sendmail.puts message
+        sendmail.close
     end
 end
 
